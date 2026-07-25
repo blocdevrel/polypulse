@@ -1,0 +1,12 @@
+node_modules
+.next
+*.tsbuildinfo
+.git
+.neon
+.agents
+.railway
+.cursor
+*.log
+.env
+.env.*
+!.env.example

@@ -1,118 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import type { ReportResponse, TradeRecord } from "@/types";
-import { connectHostWallet, isMiniPay } from "@/lib/minipay";
-import { fetchReport } from "@/lib/fetch/report";
-
-function formatPrice(raw: string | undefined): string {
-  const value = (raw || "0.05").replace(/^\$/, "").trim() || "0.05";
-  return `$${value}`;
-}
-
-const PRICE = formatPrice(process.env.NEXT_PUBLIC_REPORT_PRICE);
-const BTC_URL_EXAMPLE =
-  "https://polymarket.com/event/btc-updown-15m-1780433100";
-const BTC_HINT = /btc|bitcoin/i;
-
-type Phase = "idle" | "loading" | "payment" | "done" | "error";
+import { REPORT_PRICE, BTC_URL_EXAMPLE } from "./constants";
+import { getWalletStatus, resolveMiniPayBrowseUrl } from "./order";
+import { useReportApp } from "./useReportApp";
+import { ReportView } from "./ReportView";
 
 export function ReportApp() {
-  const [url, setUrl] = useState("");
-  const [limit, setLimit] = useState(20);
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const [report, setReport] = useState<ReportResponse | null>(null);
-  const [miniPay, setMiniPay] = useState(false);
-  const [address, setAddress] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const {
+    url,
+    setUrl,
+    limit,
+    setLimit,
+    phase,
+    error,
+    report,
+    miniPay,
+    address,
+    busy,
+    showConnect,
+    submitOrder,
+    connectDesktopWallet,
+  } = useReportApp();
 
-  useEffect(() => {
-    const mini = isMiniPay();
-    setMiniPay(mini);
-    if (!mini) return;
-    void connectHostWallet()
-      .then((addr) => setAddress(addr))
-      .catch(() => setAddress(null));
-  }, []);
-
-  const live = useMemo(() => {
-    if (miniPay && address) {
-      return {
-        className: "pp-live",
-        text: `MiniPay · ${shorten(address)}`,
-      };
-    }
-    if (miniPay) {
-      return { className: "pp-live", text: "MiniPay connected" };
-    }
-    if (address) {
-      return { className: "pp-live", text: shorten(address) };
-    }
-    return { className: "pp-live is-idle", text: "Ready when you are" };
-  }, [miniPay, address]);
-
-  function runReport() {
-    const trimmed = url.trim();
-    if (!trimmed) {
-      setError("Paste a Polymarket BTC event URL or market slug.");
-      setPhase("error");
-      return;
-    }
-    if (!BTC_HINT.test(trimmed)) {
-      setError(
-        "PolyPulse currently supports BTC markets only. Use a BTC Up/Down URL or slug.",
-      );
-      setPhase("error");
-      return;
-    }
-
-    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit) || 20));
-
-    setError(null);
-    setReport(null);
-    setPhase("loading");
-
-    startTransition(async () => {
-      const result = await fetchReport(trimmed, safeLimit);
-      if (result.ok) {
-        setReport(result.report);
-        setPhase("done");
-        return;
-      }
-      if (result.paymentRequired) {
-        setPhase("payment");
-        setError(null);
-        return;
-      }
-      setError(result.error);
-      setPhase("error");
-    });
-  }
-
-  async function connectDesktop() {
-    try {
-      const addr = await connectHostWallet();
-      setAddress(addr);
-    } catch {
-      setError("Could not connect wallet.");
-      setPhase("error");
-    }
-  }
-
-  const busy = pending || phase === "loading";
-  const showConnect = !miniPay && !address;
+  const wallet = getWalletStatus(miniPay, address);
+  const miniPayBrowseUrl = resolveMiniPayBrowseUrl();
   const stageClass = report ? "pp-stage has-report" : "pp-stage";
-  const publicAppUrl =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "";
-  const isLocalApp =
-    !publicAppUrl ||
-    publicAppUrl.includes("localhost") ||
-    publicAppUrl.includes("127.0.0.1");
-  const miniPayBrowseUrl =
-    !isLocalApp && publicAppUrl
-      ? `https://link.minipay.xyz/browse?url=${encodeURIComponent(publicAppUrl)}`
-      : null;
+  const ctaLabel = busy
+    ? miniPay
+      ? "Approve in MiniPay…"
+      : "Working…"
+    : "Get report";
 
   return (
     <div className={stageClass}>
@@ -128,9 +45,9 @@ export function ReportApp() {
 
       <form
         className="pp-order"
-        onSubmit={(e) => {
-          e.preventDefault();
-          runReport();
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submitOrder();
         }}
       >
         <div className="pp-order-head">
@@ -158,7 +75,7 @@ export function ReportApp() {
           <input
             id="market-url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(event) => setUrl(event.target.value)}
             placeholder={BTC_URL_EXAMPLE}
             autoComplete="off"
             spellCheck={false}
@@ -182,7 +99,7 @@ export function ReportApp() {
               min={1}
               max={100}
               value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
+              onChange={(event) => setLimit(Number(event.target.value))}
               disabled={busy}
               aria-describedby="trade-limit-hint"
               required
@@ -198,26 +115,26 @@ export function ReportApp() {
               className="pp-price-value"
               aria-labelledby="order-price-label"
             >
-              {PRICE}
+              {REPORT_PRICE}
             </div>
           </div>
         </div>
 
         <button type="submit" className="pp-cta" disabled={busy}>
-          <span>{busy ? "Working…" : "Get report"}</span>
-          <span className="pp-cta-price">{PRICE}</span>
+          <span>{ctaLabel}</span>
+          <span className="pp-cta-price">{REPORT_PRICE}</span>
         </button>
 
         <div className="pp-meta-row">
-          <span className={live.className}>
+          <span className={wallet.className}>
             <i aria-hidden />
-            {live.text}
+            {wallet.label}
           </span>
           {showConnect ? (
             <button
               type="button"
               className="pp-linkish"
-              onClick={() => void connectDesktop()}
+              onClick={() => void connectDesktopWallet()}
               disabled={busy}
             >
               Connect wallet
@@ -226,35 +143,11 @@ export function ReportApp() {
         </div>
 
         {phase === "payment" ? (
-          <div className="pp-banner pp-banner-pay" role="status">
-            {miniPay ? (
-              <>
-                MiniPay is connected. Approve the USDC x402 charge when prompted,
-                then tap Get report again.
-              </>
-            ) : (
-              <>
-                <strong>Payment required ({PRICE} USDC).</strong> MiniPay is not
-                available in this browser — open PolyPulse inside the MiniPay
-                app to pay.
-                {miniPayBrowseUrl ? (
-                  <>
-                    {" "}
-                    <a className="pp-inline-link" href={miniPayBrowseUrl}>
-                      Open in MiniPay
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    {" "}
-                    Expose this app with a public HTTPS URL (ngrok), set{" "}
-                    <code>NEXT_PUBLIC_APP_URL</code>, then open it via MiniPay
-                    Developer Settings → Load Test Page.
-                  </>
-                )}
-              </>
-            )}
-          </div>
+          <PaymentBanner
+            error={error}
+            miniPay={miniPay}
+            browseUrl={miniPayBrowseUrl}
+          />
         ) : null}
 
         {error && phase === "error" ? (
@@ -269,61 +162,38 @@ export function ReportApp() {
   );
 }
 
-function ReportView({ report }: { report: ReportResponse }) {
+function PaymentBanner({
+  error,
+  miniPay,
+  browseUrl,
+}: {
+  error: string | null;
+  miniPay: boolean;
+  browseUrl: string | null;
+}) {
   return (
-    <section className="pp-report" aria-label="Intelligence report">
-      <article className="pp-sheet">
-        <span className="pp-section-label">Market</span>
-        <h2>{report.slug}</h2>
-        <div className="pp-chips">
-          <span className="pp-chip pp-chip-mint">{report.count} trades</span>
-          <span className="pp-chip pp-chip-sky">limit {report.limit}</span>
-          <span className="pp-chip">
-            {new Date(report.timestamp).toLocaleString()}
-          </span>
-        </div>
-        <p className="pp-analysis">{report.analysis}</p>
-      </article>
-
-      <article className="pp-sheet">
-        <span className="pp-section-label">Recent trades</span>
-        {report.trades.length > 0 ? (
-          <ul className="pp-trades">
-            {report.trades.slice(0, Math.min(12, report.limit)).map((trade) => (
-              <TradeRow key={trade.id} trade={trade} />
-            ))}
-          </ul>
-        ) : (
-          <p className="pp-analysis">No recent public trades in this window.</p>
-        )}
-      </article>
-    </section>
+    <div className="pp-banner pp-banner-pay" role="status">
+      {error ? (
+        error
+      ) : miniPay ? (
+        <>
+          Tap <strong>Get report</strong> — MiniPay will ask you to approve{" "}
+          {REPORT_PRICE} USDC.
+        </>
+      ) : (
+        <>
+          <strong>Payment required ({REPORT_PRICE} USDC).</strong> Open this app
+          inside MiniPay to approve. Desktop browsers cannot sign.
+          {browseUrl ? (
+            <>
+              {" "}
+              <a className="pp-inline-link" href={browseUrl}>
+                Open in MiniPay
+              </a>
+            </>
+          ) : null}
+        </>
+      )}
+    </div>
   );
-}
-
-function TradeRow({ trade }: { trade: TradeRecord }) {
-  const side = (trade.side || "?").toLowerCase();
-  const sideClass = side.startsWith("b") ? "buy" : "sell";
-
-  return (
-    <li className="pp-trade">
-      <div className={`pp-trade-side ${sideClass}`}>
-        {(trade.side || "—").slice(0, 3)}
-      </div>
-      <div className="pp-trade-main">
-        <strong>{trade.outcome || "Trade"}</strong>
-        <span>
-          {trade.timestamp ? new Date(trade.timestamp).toLocaleString() : "—"}
-          {trade.size != null ? ` · size ${trade.size}` : ""}
-        </span>
-      </div>
-      <div className="pp-trade-price">
-        {trade.price != null ? trade.price.toFixed(3) : "—"}
-      </div>
-    </li>
-  );
-}
-
-function shorten(address: string): string {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
