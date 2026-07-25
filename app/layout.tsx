@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,7 +34,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <div className="pp-frame">
+          <SiteHeader />
+          <main className="pp-shell">{children}</main>
+          <SiteFooter />
+        </div>
+      </body>
     </html>
   );
 }
