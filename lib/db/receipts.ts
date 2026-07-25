@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import type { ReportResponse } from "@/types";
 import { prisma } from "./prisma";
 
@@ -34,7 +35,7 @@ export async function completeReceipt(
     where: { paymentKey },
     data: {
       status: "completed",
-      reportJson: report,
+      reportJson: report as unknown as Prisma.InputJsonValue,
       error: null,
     },
   });
