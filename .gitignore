@@ -14,6 +14,14 @@ out/
 Thumbs.db
 *.log
 .cursor/
-.neon/
-.railway/
 
+# local tooling / agent / neon / railway
+.neon/
+.neon
+.agents/
+.railway/
+skills-lock.json
+
+# working docs (keep out of remote)
+architecture.md
+plan.md
