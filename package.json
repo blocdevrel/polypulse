@@ -4,19 +4,28 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:push": "prisma db push"
   },
+  "postinstall": "prisma generate",
   "dependencies": {
-    "next": "^15.3.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@prisma/client": "^6.19.3",
+    "next": "^15.5.21",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "thirdweb": "^5.120.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "prisma": "^6.19.3",
     "typescript": "^5.8.0"
   },
   "engines": {

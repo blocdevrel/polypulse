@@ -25,3 +25,8 @@ skills-lock.json
 # working docs (keep out of remote)
 architecture.md
 plan.md
+build.md
+
+# prisma
+prisma/*.db
+prisma/*.db-journal

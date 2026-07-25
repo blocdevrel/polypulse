@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReceiptStatus {
+  pending
+  completed
+  failed
+}
+
+model ReportReceipt {
+  id          String        @id @default(cuid())
+  paymentKey  String        @unique
+  input       String
+  slug        String
+  conditionId String
+  reportJson  Json?
+  status      ReceiptStatus @default(pending)
+  error       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
