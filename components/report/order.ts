@@ -72,6 +72,6 @@ export function getWalletStatus(
   }
   return {
     className: "pp-live is-idle",
-    label: "Open in MiniPay to pay",
+    label: "Ready when you are",
   };
 }

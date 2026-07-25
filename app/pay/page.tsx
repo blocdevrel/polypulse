@@ -16,17 +16,17 @@ function PayInner() {
   return (
     <div className="pp-stage">
       <header className="pp-hero">
-        <div className="pp-logo">
-          <span className="pp-orb" aria-hidden />
-          <h1 className="pp-wordmark">PolyPulse</h1>
-        </div>
-        <p className="pp-tagline">Finish payment in MiniPay, then open your report.</p>
+        <p className="pp-eyebrow">Handoff · MiniPay</p>
+        <h1 className="pp-headline">Finish in MiniPay</h1>
+        <p className="pp-tagline">
+          Complete payment in MiniPay, then open your report.
+        </p>
       </header>
 
       <div className="pp-order">
         <div className="pp-order-head">
           <span className="pp-order-kicker">Payment</span>
-          <h2 className="pp-order-title">Finish in MiniPay</h2>
+          <h2 className="pp-order-title">Continue to report</h2>
         </div>
         <p className="pp-order-hint">
           {requestId
@@ -54,16 +54,8 @@ function PayInner() {
 
 export default function PayPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="pp-shell">
-          <div className="pp-stage">Loading…</div>
-        </main>
-      }
-    >
-      <main className="pp-shell">
-        <PayInner />
-      </main>
+    <Suspense fallback={<div className="pp-stage">Loading…</div>}>
+      <PayInner />
     </Suspense>
   );
 }

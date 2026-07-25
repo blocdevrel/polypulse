@@ -33,129 +33,127 @@ export function ReportApp() {
 
   return (
     <div className={stageClass}>
-      <header className="pp-hero">
-        <div className="pp-logo">
-          <span className="pp-orb" aria-hidden />
-          <h1 className="pp-wordmark">PolyPulse</h1>
-        </div>
-        <p className="pp-tagline">
-          BTC Up/Down intelligence. Pay once in USDC. Read the pulse.
-        </p>
-      </header>
-
-      <form
-        className="pp-order"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submitOrder();
-        }}
-      >
-        <div className="pp-order-head">
-          <span className="pp-order-kicker">Order Details</span>
-          <h2 className="pp-order-title">PolyPulse · BTC Recent Trades</h2>
-        </div>
-
-        <div className="pp-order-field">
-          <div className="pp-order-label-row">
-            <label htmlFor="market-url">
-              Url<span aria-hidden>*</span>
-            </label>
-            <button
-              type="button"
-              className="pp-linkish"
-              disabled={busy}
-              onClick={() => setUrl(BTC_URL_EXAMPLE)}
-            >
-              Use example
-            </button>
+      <section className="pp-order-page" aria-labelledby="order-heading">
+        <form
+          id="order"
+          className="pp-order"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitOrder();
+          }}
+        >
+          <div className="pp-order-head">
+            <span className="pp-order-kicker">Order Details</span>
+            <h1 id="order-heading" className="pp-order-title">
+              PolyPulse · BTC Recent Trades
+            </h1>
           </div>
-          <p className="pp-order-hint" id="market-url-hint">
-            Polymarket BTC event URL or market slug.
-          </p>
-          <input
-            id="market-url"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder={BTC_URL_EXAMPLE}
-            autoComplete="off"
-            spellCheck={false}
-            disabled={busy}
-            aria-describedby="market-url-hint"
-            required
-          />
-        </div>
 
-        <div className="pp-order-row">
           <div className="pp-order-field">
-            <label htmlFor="trade-limit">
-              Limit<span aria-hidden>*</span>
-            </label>
-            <p className="pp-order-hint" id="trade-limit-hint">
-              Max recent trades.
+            <div className="pp-order-label-row">
+              <label htmlFor="market-url">
+                Url<span aria-hidden>*</span>
+              </label>
+              <button
+                type="button"
+                className="pp-linkish"
+                disabled={busy}
+                onClick={() => setUrl(BTC_URL_EXAMPLE)}
+              >
+                Use example
+              </button>
+            </div>
+            <p className="pp-order-hint" id="market-url-hint">
+              Polymarket BTC event URL or market slug.
             </p>
             <input
-              id="trade-limit"
-              type="number"
-              min={1}
-              max={100}
-              value={limit}
-              onChange={(event) => setLimit(Number(event.target.value))}
+              id="market-url"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder={BTC_URL_EXAMPLE}
+              autoComplete="off"
+              spellCheck={false}
               disabled={busy}
-              aria-describedby="trade-limit-hint"
+              aria-describedby="market-url-hint"
               required
             />
           </div>
 
-          <div className="pp-order-field">
-            <span className="pp-order-label" id="order-price-label">
-              Price
-            </span>
-            <p className="pp-order-hint">USDC · pay once</p>
-            <div
-              className="pp-price-value"
-              aria-labelledby="order-price-label"
-            >
-              {REPORT_PRICE}
+          <div className="pp-order-row">
+            <div className="pp-order-field">
+              <label htmlFor="trade-limit">
+                Limit<span aria-hidden>*</span>
+              </label>
+              <p className="pp-order-hint" id="trade-limit-hint">
+                Max recent trades.
+              </p>
+              <input
+                id="trade-limit"
+                type="number"
+                min={1}
+                max={100}
+                value={limit}
+                onChange={(event) => setLimit(Number(event.target.value))}
+                disabled={busy}
+                aria-describedby="trade-limit-hint"
+                required
+              />
+            </div>
+
+            <div className="pp-order-field">
+              <span className="pp-order-label" id="order-price-label">
+                Price
+              </span>
+              <p className="pp-order-hint" id="order-price-hint">
+                USDC · pay once
+              </p>
+              <div
+                className="pp-price-value"
+                aria-labelledby="order-price-label"
+                aria-describedby="order-price-hint"
+              >
+                {REPORT_PRICE}
+              </div>
             </div>
           </div>
-        </div>
 
-        <button type="submit" className="pp-cta" disabled={busy}>
-          <span>{ctaLabel}</span>
-          <span className="pp-cta-price">{REPORT_PRICE}</span>
-        </button>
+          <button type="submit" className="pp-cta" disabled={busy}>
+            <span>{ctaLabel}</span>
+            <span className="pp-cta-price">{REPORT_PRICE}</span>
+          </button>
 
-        <div className="pp-meta-row">
-          <span className={wallet.className}>
-            <i aria-hidden />
-            {wallet.label}
-          </span>
-          {showConnect ? (
-            <button
-              type="button"
-              className="pp-linkish"
-              onClick={() => void connectDesktopWallet()}
-              disabled={busy}
-            >
-              Connect wallet
-            </button>
-          ) : null}
-        </div>
-
-        {phase === "payment" ? (
-          <PaymentBanner
-            error={error}
-            miniPay={miniPay}
-            browseUrl={miniPayBrowseUrl}
-          />
-        ) : null}
-
-        {error && phase === "error" ? (
-          <div className="pp-banner pp-banner-err" role="alert">
-            {error}
+          <div className="pp-meta-row">
+            <span className={wallet.className}>
+              <i aria-hidden />
+              {wallet.label}
+            </span>
+            {showConnect ? (
+              <button
+                type="button"
+                className="pp-linkish"
+                onClick={() => void connectDesktopWallet()}
+                disabled={busy}
+              >
+                Connect wallet
+              </button>
+            ) : null}
           </div>
-        ) : null}
-      </form>
+
+          {phase === "payment" ? (
+            <PaymentBanner
+              error={error}
+              miniPay={miniPay}
+              browseUrl={miniPayBrowseUrl}
+            />
+          ) : null}
+
+          {error && phase === "error" ? (
+            <div className="pp-banner pp-banner-err" role="alert">
+              {error}
+            </div>
+          ) : null}
+        </form>
+      </section>
 
       {report ? <ReportView report={report} /> : null}
     </div>
@@ -171,29 +169,33 @@ function PaymentBanner({
   miniPay: boolean;
   browseUrl: string | null;
 }) {
+  if (error) {
+    return (
+      <div className="pp-banner pp-banner-pay" role="status">
+        {error}
+      </div>
+    );
+  }
+
+  if (miniPay) {
+    return (
+      <div className="pp-banner pp-banner-pay" role="status">
+        Approve {REPORT_PRICE} USDC in MiniPay.
+      </div>
+    );
+  }
+
   return (
     <div className="pp-banner pp-banner-pay" role="status">
-      {error ? (
-        error
-      ) : miniPay ? (
+      Open in MiniPay to pay {REPORT_PRICE} USDC.
+      {browseUrl ? (
         <>
-          Tap <strong>Get report</strong> — MiniPay will ask you to approve{" "}
-          {REPORT_PRICE} USDC.
+          {" "}
+          <a className="pp-inline-link" href={browseUrl}>
+            Open
+          </a>
         </>
-      ) : (
-        <>
-          <strong>Payment required ({REPORT_PRICE} USDC).</strong> Open this app
-          inside MiniPay to approve. Desktop browsers cannot sign.
-          {browseUrl ? (
-            <>
-              {" "}
-              <a className="pp-inline-link" href={browseUrl}>
-                Open in MiniPay
-              </a>
-            </>
-          ) : null}
-        </>
-      )}
+      ) : null}
     </div>
   );
 }
