@@ -14,7 +14,6 @@ export type ResolvedMarket = {
   market: GammaMarket;
 };
 
-/** Extract Polymarket slug from a full URL or accept a bare slug. */
 export function extractSlug(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
@@ -23,7 +22,6 @@ export function extractSlug(input: string): string | null {
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
       const u = new URL(trimmed);
       const parts = u.pathname.split("/").filter(Boolean);
-      // /event/<slug> or /market/<slug>
       const eventIdx = parts.findIndex((p) => p === "event" || p === "market");
       if (eventIdx >= 0 && parts[eventIdx + 1]) {
         return decodeURIComponent(parts[eventIdx + 1]!);
@@ -37,7 +35,6 @@ export function extractSlug(input: string): string | null {
     return null;
   }
 
-  // Bare slug: allow alphanumerics, hyphens, underscores
   if (/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,200}$/.test(trimmed)) {
     return trimmed;
   }

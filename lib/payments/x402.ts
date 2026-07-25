@@ -40,11 +40,45 @@ function getPaymentStack() {
   return cached;
 }
 
+export function resolveResourceUrl(request: Request): string {
+  const configured = config.appUrl.replace(/\/$/, "");
+  if (!/localhost|127\.0\.0\.1/i.test(configured)) {
+    return `${configured}/api/report`;
+  }
+
+  const forwardedHost = (
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    ""
+  )
+    .split(",")[0]
+    ?.trim();
+  const forwardedProto = (
+    request.headers.get("x-forwarded-proto") || "https"
+  )
+    .split(",")[0]
+    ?.trim();
+
+  if (forwardedHost && !/localhost|127\.0\.0\.1/i.test(forwardedHost)) {
+    return `${forwardedProto}://${forwardedHost}/api/report`;
+  }
+
+  try {
+    const url = new URL(request.url);
+    if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+      return `${url.origin}/api/report`;
+    }
+  } catch {
+  }
+
+  return `${configured}/api/report`;
+}
+
 export async function settleReportPayment(
   paymentData: string | null,
+  resourceUrl: string,
 ): Promise<PaymentSettleOk | PaymentRequired> {
   const { facilitator: thirdwebFacilitator } = getPaymentStack();
-  const resourceUrl = `${config.appUrl}/api/report`;
 
   const result = await settlePayment({
     resourceUrl,
@@ -69,7 +103,6 @@ export async function settleReportPayment(
     };
   }
 
-  // Prefer SDK-provided Response when present; otherwise reconstruct 402.
   const anyResult = result as {
     response?: Response;
     responseBody?: unknown;
@@ -81,16 +114,36 @@ export async function settleReportPayment(
     return { kind: "required", response: anyResult.response };
   }
 
+  const headers = new Headers(anyResult.responseHeaders);
+  if (!headers.has("Access-Control-Expose-Headers")) {
+    headers.set(
+      "Access-Control-Expose-Headers",
+      "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE",
+    );
+  }
+
+  const body = anyResult.responseBody;
+  const hasBody =
+    body !== undefined &&
+    body !== null &&
+    !(
+      typeof body === "object" &&
+      !Array.isArray(body) &&
+      Object.keys(body as object).length === 0
+    );
+
   return {
     kind: "required",
-    response: Response.json(anyResult.responseBody ?? { error: "Payment Required" }, {
+    response: new Response(hasBody ? JSON.stringify(body) : null, {
       status: anyResult.status || 402,
-      headers: anyResult.responseHeaders,
+      headers: {
+        ...Object.fromEntries(headers.entries()),
+        ...(hasBody ? { "Content-Type": "application/json" } : {}),
+      },
     }),
   };
 }
 
-/** Deterministic key from raw payment header when needed. */
 export function hashPaymentData(paymentData: string): string {
   return createHash("sha256").update(paymentData).digest("hex");
 }

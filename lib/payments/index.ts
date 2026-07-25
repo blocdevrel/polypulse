@@ -1,5 +1,6 @@
 export {
   settleReportPayment,
+  resolveResourceUrl,
   hashPaymentData,
   type PaymentSettleOk,
   type PaymentRequired,

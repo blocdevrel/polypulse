@@ -43,13 +43,12 @@ function paymentKeyFrom(
 export async function runReportPipeline(
   body: unknown,
   paymentData: string | null,
+  resourceUrl: string,
 ): Promise<ReportPipelineResult> {
   const request = parseReportRequest(body);
-
-  // Resolve before charging — invalid markets never hit x402.
   const resolved = await resolveMarket(request.url);
 
-  const settle = await settleReportPayment(paymentData);
+  const settle = await settleReportPayment(paymentData, resourceUrl);
   if (settle.kind === "required") {
     return { kind: "payment_required", response: settle.response };
   }

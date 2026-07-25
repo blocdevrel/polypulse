@@ -53,7 +53,6 @@ export async function fetchRecentTrades(
       outcome: t.outcome ?? null,
     }));
   } catch {
-    // Public CLOB trade filters vary; empty is a valid deliverable.
     return [];
   }
 }
