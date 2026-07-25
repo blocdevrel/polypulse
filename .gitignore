@@ -22,6 +22,10 @@ Thumbs.db
 .agents/
 .railway/
 skills-lock.json
+.nvmrc
+.railwayignore
+nixpacks.toml
+railway.toml
 
 # working docs (keep out of remote)
 architecture.md
